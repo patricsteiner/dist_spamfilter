@@ -1,17 +1,21 @@
 package dist_spamfilter;
 
 public class Counter {
-	private int count = 0;
+	private double count = 0;
 	
 	public void inc() {
 		count++;
 	}
 	
-	public int get() {
+	public double get() {
 		return count;
 	}
 	
 	public String toString() {
-		return Integer.toString(count);
+		return Double.toString(count);
+	}
+	
+	public void setVeryLow() {
+		count = 0.0001;
 	}
 }

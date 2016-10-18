@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -18,17 +17,31 @@ public class SpamFilter {
 	Map<String, Counter> ham = new HashMap<>();
 	Map<String, Counter> spam = new HashMap<>();
 	
-	int hamMailsAnalized = 0;
-	int spamMailsAnalized = 0;
+	int hamMailsAnalyzed = 0;
+	int spamMailsAnalyzed = 0;
 	
+	//TODO: make sure every word is in ham as well as spam! (set counter to verylow)
+	
+	/**
+	 * 
+	 * @throws IOException
+	 */
 	public void learn() throws IOException {
 		ZipFile zipFile = new ZipFile("ham-anlern.zip");
-		hamMailsAnalized += analyzeMails(zipFile, ham);
+		hamMailsAnalyzed += analyzeMails(zipFile, ham);
 		zipFile = new ZipFile("spam-anlern.zip");
-		spamMailsAnalized += analyzeMails(zipFile, spam);
+		spamMailsAnalyzed += analyzeMails(zipFile, spam);
 	    
-	    System.out.println(hamMailsAnalized + " - " + ham.get("cash"));
-	    System.out.println(spamMailsAnalized + " - " + spam.get("cash"));
+		
+		//testing stuff...
+		String wordToTest = "money";
+		System.out.println();
+	    System.out.println(hamMailsAnalyzed + " ham mails analyzed, found '" + wordToTest + "' " + ham.get(wordToTest) + " times");
+	    System.out.println(spamMailsAnalyzed + " spam mails analyzed, found '" + wordToTest + "' " + spam.get(wordToTest) + " times");
+	    System.out.println();
+	    System.out.println("Probability of '" + wordToTest + "' being ham: " + getProbability(wordToTest, ham, hamMailsAnalyzed));
+	    System.out.println("Probability of '" + wordToTest + "' being spam: " + getProbability(wordToTest, spam, spamMailsAnalyzed));
+	    
 	}
 	
 	/**
@@ -42,13 +55,19 @@ public class SpamFilter {
 		Enumeration<? extends ZipEntry> entries = zipFile.entries();
 		while (entries.hasMoreElements()) {
 	        ZipEntry entry = entries.nextElement();
-	        analyzeMail(zipFile, entry, map);
+	        analyzeMail(zipFile.getInputStream(entry), map);
 	    }
 		return zipFile.size();
 	}
 	
-	public void analyzeMail(ZipFile zipFile, ZipEntry zipEntry, Map<String, Counter> map) throws IOException {
-		Scanner scanner = new Scanner(zipFile.getInputStream(zipEntry));
+	/**
+	 * 
+	 * @param instream
+	 * @param map
+	 * @throws IOException
+	 */
+	public void analyzeMail(InputStream instream, Map<String, Counter> map) throws IOException {
+		Scanner scanner = new Scanner(instream);
         scanner.useDelimiter(" ");
         while (scanner.hasNext()) {
         	try {
@@ -67,8 +86,25 @@ public class SpamFilter {
         scanner.close();
 	}
 	
-	public double calculateSpamProbability(ZipEntry zipEntry) {
+	/**
+	 * 
+	 * @param instream
+	 * @return
+	 */
+	public double calculateSpamProbability(InputStream instream) {
 		return 0;
-		
+		//TODO
+	}
+	
+	
+	/**
+	 * 
+	 * @param word
+	 * @param map
+	 * @param amountOfMailAnalyzed
+	 * @return
+	 */
+	public double getProbability(String word, Map<String, Counter> map, int amountOfMailAnalyzed) {
+		return map.get(word).get() / amountOfMailAnalyzed;
 	}
 }
