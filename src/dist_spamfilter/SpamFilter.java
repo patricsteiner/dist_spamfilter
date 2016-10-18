@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.InputMismatchException;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -29,13 +31,18 @@ public class SpamFilter {
 	        Scanner scanner = new Scanner(zipFile.getInputStream(entry));
 	        scanner.useDelimiter(" ");
 	        while (scanner.hasNext()) {
-	        	String word = scanner.next();
-	        	//TODO: max increase counter once per mail?
-	        	if (!map.containsKey(word)) {
-	        		map.put(word, new Counter());
-	        		System.out.println(word);
+	        	try {
+	        		String word = scanner.next("[a-zA-Z0-9]+");
+	        		//TODO: max increase counter once per mail?
+		        	if (!map.containsKey(word)) {
+		        		map.put(word, new Counter());
+		        		System.out.println(word);
+		        	}
+		        	map.get(word).inc();
 	        	}
-	        	map.get(word).inc();
+	        	catch (InputMismatchException e) {
+	        		scanner.next();
+	        	}
 	        }
 	        scanner.close();
 	    }
