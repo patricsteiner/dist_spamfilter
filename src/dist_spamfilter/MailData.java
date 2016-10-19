@@ -39,6 +39,7 @@ public class MailData {
     }
     
     public double calculateProbability(String word) {
-        return getWordCount(word)/getMailCount();
+    	double prob = getWordCount(word)/getMailCount();
+        return prob < .1 ? .1 : prob; //is this a good way to prevent double underflow?
     }
 }

@@ -43,7 +43,7 @@ public class SpamFilterTest {
     public void testCalculateProbability() {
         String[] wordsToTest = { "money", "cash", "have", "hello", "pill", "viagra", "prince", 
         		"and", "casino", "sex", "online", "month", "week", "day", "popular", "mail",
-        		"technology", "insurance", "it", "your", "greetings", "regards" };
+        		"technology", "insurance", "it", "your", "greetings", "regards", "cheap", "win", "prize" };
         System.out.println("Word         P(Word|Ham)   P(Word|Spam)");
         System.out.println("---------------------------------------");
         for (String word : wordsToTest) {
