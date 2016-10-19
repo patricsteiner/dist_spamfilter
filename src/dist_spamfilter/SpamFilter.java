@@ -2,24 +2,35 @@ package dist_spamfilter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class SpamFilter {
-	final double P_H = 0.5;
-	final double P_S = 0.5;
+	final double ALPHA = 0.5;
 	
-	MailData ham;
+	MailData ham; //not private for easier testing
 	MailData spam;
-	
-	//TODO: refactor, better method names, more OO
-	//TODO: make sure every word is in ham as well as spam! (set counter to verylow? or solve it with defualtvalue...)
 	
 	public void learn() throws IOException {
 		ham = readMails(new ZipFile("ham-anlern.zip"));
 		spam = readMails(new ZipFile("spam-anlern.zip"));
+		correlate();
+	}
+	
+	public void correlate() {
+		for (String hamWord : ham.getWords()) {
+			if (spam.getWordCount(hamWord) < 1) {
+				spam.addDummyWord(hamWord, ALPHA);
+			}
+		}
+		for (String spamWord : spam.getWords()) {
+			if (ham.getWordCount(spamWord) < 1) {
+				ham.addDummyWord(spamWord, ALPHA);
+			}
+		}
 	}
 	
 	private MailData readMails(ZipFile zipFile) throws IOException {
@@ -33,14 +44,20 @@ public class SpamFilter {
         zipFile.close();
         return mailData;
 	}
-
-	public double calculateSpamProbability(InputStream instream) {
-		Set<String> words = Util.getWords(instream);
-		double numerator = P_S; //TODO is it right to use these values? or should it just be 1?
-		double denominator = P_H;
+	
+	public double calculateProbability(InputStream instream, boolean hamOrSpam) {
+		Collection<String> words = Util.getWords(instream);
+		double numerator = 1;
+		double denominator = 1;
 		for (String word : words) {
-		    numerator *= spam.calculateProbability(word);
-		    denominator *= ham.calculateProbability(word);
+			if (hamOrSpam) { 
+				numerator *= ham.calculateProbability(word); //TODO double underflow! change formula somehow
+			    denominator *= spam.calculateProbability(word);
+			} 
+			else {
+				numerator *= spam.calculateProbability(word);
+			    denominator *= ham.calculateProbability(word);
+			}
 		}
 		denominator += numerator;
 	    return numerator / denominator;

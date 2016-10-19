@@ -1,14 +1,14 @@
 package dist_spamfilter;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.InputMismatchException;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Util {
-    public static Set<String> getWords(InputStream instream) {
-        Set<String> words = new HashSet<>();
+    public static Collection<String> getWords(InputStream instream) {
+        Collection<String> words = new HashSet<>(); //use either Set or List, depending on if you want duplicates or not
         Scanner scanner = new Scanner(instream);
         scanner.useDelimiter(" ");
         while (scanner.hasNext()) {

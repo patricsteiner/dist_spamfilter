@@ -22,8 +22,4 @@ public class Counter {
 	public String toString() {
 		return Double.toString(value);
 	}
-	
-	public void setVeryLow() {
-	    value = 0.0001;
-	}
 }
