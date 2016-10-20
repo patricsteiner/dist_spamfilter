@@ -2,6 +2,8 @@ package dist_spamfilter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
@@ -13,7 +15,7 @@ import java.util.zip.ZipFile;
  *
  */
 public class SpamFilter {
-	final double ALPHA = 0.5;
+	final double ALPHA = 0.1; //counter for dummy values (see MailData)
 	
 	MailData ham; //not private for easier testing
 	MailData spam;
@@ -72,19 +74,32 @@ public class SpamFilter {
 	 */
 	public double calculateProbability(InputStream instream, boolean hamOrSpam) {
 		Collection<String> words = Util.getWords(instream);
-		double numerator = 1;
-		double denominator = 1;
-		for (String word : words) {
-			if (hamOrSpam) { 
-				numerator *= ham.calculateProbability(word); //TODO double underflow! change formula somehow
-			    denominator *= spam.calculateProbability(word);
-			} 
-			else {
-				numerator *= spam.calculateProbability(word);
-			    denominator *= ham.calculateProbability(word);
-			}
-		}
-		denominator += numerator;
-	    return numerator / denominator;
+		return calculateProbability(words, hamOrSpam);
+	}
+	
+	/**
+     * Uses Bayes Formula and gathered data to calculate the probability of a mail being spam or ham.
+     * @param words The email
+     * @param hamOrSpam If true: return P(Ham|words), else P(Spam|words)
+     * @return P(Ham/Spam|words)
+     */
+	public double calculateProbability(Collection<String> words, boolean hamOrSpam) {
+	    BigDecimal numerator = new BigDecimal(1, new MathContext(100));
+        BigDecimal denominator = new BigDecimal(1, new MathContext(100));
+        for (String word : words) {
+            //only take big vals to avoid underflow
+            if (ham.calculateProbability(word) > .001 || spam.calculateProbability(word) > .001) {
+                if (hamOrSpam) { 
+                    numerator = numerator.multiply(new BigDecimal(ham.calculateProbability(word)), new MathContext(100)); //TODO double underflow! change formula somehow
+                    denominator = denominator.multiply(new BigDecimal(spam.calculateProbability(word)), new MathContext(100));
+                }
+                else {
+                    numerator = numerator.multiply(new BigDecimal(spam.calculateProbability(word)), new MathContext(20));
+                    denominator = denominator.multiply(new BigDecimal(ham.calculateProbability(word)), new MathContext(20));
+                }
+            }
+        }
+        denominator = denominator.add(numerator);
+        return numerator.divide(denominator, 100, BigDecimal.ROUND_HALF_UP).doubleValue();
 	}
 }

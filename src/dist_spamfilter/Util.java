@@ -23,7 +23,7 @@ public class Util {
         scanner.useDelimiter(" ");
         while (scanner.hasNext()) {
             try {
-                String word = scanner.next("[a-zA-Z0-9]+").toLowerCase();
+                String word = scanner.next("[a-zA-Z]+").toLowerCase();
                 words.add(word);
             }
             catch (InputMismatchException e) {

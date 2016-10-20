@@ -9,8 +9,6 @@ import java.util.TreeMap;
 /**
  * Used to store data gathered from emails. Class uses a Map<String, Counter> to
  * keep track on how often a word has occured in a set of emails.
- * @author Patric Steiner
- *
  */
 public class MailData {
     
@@ -19,7 +17,7 @@ public class MailData {
     
     /**
      * Dummy words are needed because if there is a word missing, the calculated 
-     * probability will we 0, which results in wrong behaviour of the bayes formula
+     * probability will we 0, which results in wrong behaviour of the Bayes formula
      * @param word
      * @param dummyCount should be set somewhere below 1 (find good value by calibrating)
      */
@@ -58,10 +56,10 @@ public class MailData {
     /**
      * Calculates the probability of a word occuring in an email according to collected data.
      * @param word
-     * @return 0 < probability <= 1 
+     * @return probability
      */
     public double calculateProbability(String word) {
     	double prob = getWordCount(word)/getMailCount();
-        return prob < .1 ? .1 : prob; //is this a good way to prevent double underflow?
+        return prob;
     }
 }

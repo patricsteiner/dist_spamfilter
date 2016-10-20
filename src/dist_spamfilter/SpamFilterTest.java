@@ -1,7 +1,9 @@
 package dist_spamfilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -21,12 +23,13 @@ public class SpamFilterTest {
     
     @Test
     public void test() throws IOException {
-    	testCalculateProbability("ham-kallibrierung.zip", true);
+        List<String> words = new ArrayList<>();
+    	testCalculateProbability("spam-test.zip", false);
     }
     
     @Test
     public void calibrateHam() throws IOException {
-    	
+
     }
     
     @Test
@@ -43,7 +46,8 @@ public class SpamFilterTest {
     public void testCalculateProbability() {
         String[] wordsToTest = { "money", "cash", "have", "hello", "pill", "viagra", "prince", 
         		"and", "casino", "sex", "online", "month", "week", "day", "popular", "mail",
-        		"technology", "insurance", "it", "your", "greetings", "regards", "cheap", "win", "prize" };
+        		"technology", "insurance", "it", "your", "greetings", "regards", "cheap", "win", 
+        		"prize", "enlargement", "kenia", "prince" };
         System.out.println("Word         P(Word|Ham)   P(Word|Spam)");
         System.out.println("---------------------------------------");
         for (String word : wordsToTest) {
@@ -57,7 +61,7 @@ public class SpamFilterTest {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
-            System.out.println(spamFilter.calculateProbability(zipFile.getInputStream(entry), hamOrSpam));
+            System.out.printf("%.5f%n",spamFilter.calculateProbability(zipFile.getInputStream(entry), hamOrSpam));
         }
         zipFile.close();
     }
