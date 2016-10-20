@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Scanner;
 import java.util.zip.ZipEntry;
@@ -22,7 +23,7 @@ public class SpamFilterTest {
         spamFilter = new SpamFilter();
         spamFilter.learn();
         //Un-comment the following line if you want to input your own email:
-        //readEmailFromFile();
+        readEmailFromFile();
     }
     
     
@@ -31,21 +32,22 @@ public class SpamFilterTest {
     	Scanner scanner = new Scanner(System.in);
     	String fileName = scanner.nextLine();
     	InputStream instream = new FileInputStream(new File(fileName));
+    	Collection<String> words = Util.getWords(instream);
     	System.out.println(fileName);
-    	System.out.println("Probability of being ham: " + spamFilter.calculateProbability(instream, true, false));
-    	System.out.println("Probability of being spam: " + spamFilter.calculateProbability(instream, false, false));
-    	System.out.println(fileName + " was classified as " + (spamFilter.classify(instream) ? "spam" : "ham"));
+    	System.out.println("Probability of being ham: " + spamFilter.calculateProbability(words, true, false));
+    	System.out.println("Probability of being spam: " + spamFilter.calculateProbability(words, false, false));
+    	System.out.println(fileName + " was classified as " + (spamFilter.classify(words) ? "spam" : "ham"));
     	System.out.println("Is this mail spam or ham? (type either 'spam' or 'ham')");
     	String s = "";
     	while (!s.equals("spam") && !s.equals("ham")) {
     		s = scanner.nextLine();
     	}
     	if (s.equals("spam")) {
-    		spamFilter.spam.add(Util.getWords(instream));
+    		spamFilter.spam.add(words);
     		System.out.println("Added to spam");
     	}
     	else {
-    		spamFilter.ham.add(Util.getWords(instream));
+    		spamFilter.ham.add(words);
     		System.out.println("Added to ham");
     	}
     	spamFilter.correlate();
