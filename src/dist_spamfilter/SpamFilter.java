@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
@@ -15,7 +16,7 @@ import java.util.zip.ZipFile;
  *
  */
 public class SpamFilter {
-	final double ALPHA = 0.1; //counter for dummy values (see MailData)
+	final double ALPHA = 0.01; //counter for dummy values (see MailData)
 	
 	MailData ham; //not private for easier testing
 	MailData spam;
@@ -32,7 +33,7 @@ public class SpamFilter {
 	
 	/**
 	 * Makes sure every word in ham is also in spam and vice versa. This is done 
-	 * to avoid any of the probabilities becoming 0 (@see Maildata).
+	 * to avoid any of the probabilities becoming 0 (@see MailData).
 	 * Should be called after data has been added to spam or ham.
 	 */
 	public void correlate() {
@@ -70,36 +71,80 @@ public class SpamFilter {
 	 * Uses Bayes Formula and gathered data to calculate the probability of a mail being spam or ham.
 	 * @param instream The email
 	 * @param hamOrSpam If true: return P(Ham|words), else P(Spam|words)
+	 * @param useLogFormula use different approach for calculation (@see https://en.wikipedia.org/wiki/Naive_Bayes_spam_filtering)
 	 * @return P(Ham/Spam|words)
 	 */
-	public double calculateProbability(InputStream instream, boolean hamOrSpam) {
+	public double calculateProbability(InputStream instream, boolean hamOrSpam, boolean useLogFormula) {
 		Collection<String> words = Util.getWords(instream);
-		return calculateProbability(words, hamOrSpam);
+		return calculateProbability(words, hamOrSpam, useLogFormula);
 	}
 	
 	/**
      * Uses Bayes Formula and gathered data to calculate the probability of a mail being spam or ham.
      * @param words The email
      * @param hamOrSpam If true: return P(Ham|words), else P(Spam|words)
+     * @param useLogFormula use different approach for calculation, but it doesn't work as well as 
+     * the first method. Just set it to false (@see https://en.wikipedia.org/wiki/Naive_Bayes_spam_filtering).
      * @return P(Ham/Spam|words)
      */
-	public double calculateProbability(Collection<String> words, boolean hamOrSpam) {
-	    BigDecimal numerator = new BigDecimal(1, new MathContext(100));
-        BigDecimal denominator = new BigDecimal(1, new MathContext(100));
-        for (String word : words) {
-            //only take big vals to avoid underflow
-            if (ham.calculateProbability(word) > .001 || spam.calculateProbability(word) > .001) {
-                if (hamOrSpam) { 
-                    numerator = numerator.multiply(new BigDecimal(ham.calculateProbability(word)), new MathContext(100)); //TODO double underflow! change formula somehow
-                    denominator = denominator.multiply(new BigDecimal(spam.calculateProbability(word)), new MathContext(100));
-                }
-                else {
-                    numerator = numerator.multiply(new BigDecimal(spam.calculateProbability(word)), new MathContext(20));
-                    denominator = denominator.multiply(new BigDecimal(ham.calculateProbability(word)), new MathContext(20));
-                }
-            }
-        }
-        denominator = denominator.add(numerator);
-        return numerator.divide(denominator, 100, BigDecimal.ROUND_HALF_UP).doubleValue();
+	public double calculateProbability(Collection<String> words, boolean hamOrSpam, boolean useLogFormula) {
+		MathContext mc = new MathContext(500, RoundingMode.HALF_UP);
+		if (!useLogFormula) {
+		    BigDecimal numerator = new BigDecimal(1, mc);
+	        BigDecimal denominator = new BigDecimal(1, mc);
+	        for (String word : words) {
+	        	double ph = ham.calculateProbability(word);
+	        	double ps = spam.calculateProbability(word);
+	            if (( ph > 0 || ps > 0 ) && ph < 1 && ps < 1 ) {
+	                if (hamOrSpam) { 
+	                    numerator = numerator.multiply(BigDecimal.valueOf(ph), mc);
+	                    denominator = denominator.multiply(BigDecimal.valueOf(ps), mc);
+	                }
+	                else {
+	                    numerator = numerator.multiply(BigDecimal.valueOf(ps), mc);
+	                    denominator = denominator.multiply(BigDecimal.valueOf(ph), mc);
+	                }
+	            }
+	        }
+	        denominator = denominator.add(numerator, mc);
+	        return numerator.divide(denominator, mc).doubleValue();
+		}
+		else {
+			//doesn't work that well
+		    BigDecimal sum = new BigDecimal(0, mc);
+	        for (String word : words) {
+	        	//if (ham.calculateProbability(word) > .1 || spam.calculateProbability(word) > .1)
+	        	if (hamOrSpam) {
+	        		sum.add(BigDecimal.valueOf(Math.log(1 - ham.calculateProbability(word)) - Math.log(ham.calculateProbability(word))));
+	        	} else {
+	        		double p = spam.calculateProbability(word);
+	        		if (p < 1 && p > 0) { //there are words like "from" that are in every mail, ignore these
+		        		sum = sum.add(BigDecimal.valueOf(Math.log(1 - p) - Math.log(p)));
+	        		}
+	        	}
+	        }
+	        return 1 /(1 + BigDecimal.valueOf(Math.E).pow(sum.intValue()).doubleValue());
+		}
+	}
+	
+	/**
+	 * Classifies an email (=Colleciton<String>) as either ham or spam.
+	 * @param words
+	 * @return true if mail is classified as spam, false if ham.
+	 */
+	public boolean classify(Collection<String> words) {
+		double ph = calculateProbability(words, true, false);
+		double ps = calculateProbability(words, false, false);
+		return ps > ph;
+	}
+	
+	/**
+	 * Classifies an email (=InputStream) as either ham or spam.
+	 * @param words
+	 * @return true if mail is classified as spam, false if ham.
+	 */
+	public boolean classify(InputStream instream) {
+		Collection<String> words = Util.getWords(instream);
+		return classify(words);
 	}
 }

@@ -18,6 +18,8 @@ public class MailData {
     /**
      * Dummy words are needed because if there is a word missing, the calculated 
      * probability will we 0, which results in wrong behaviour of the Bayes formula
+     * (the probability would be either 0/(0+X) = 0 or X/(X+0) = 1, no values in between
+     * would be possible).
      * @param word
      * @param dummyCount should be set somewhere below 1 (find good value by calibrating)
      */
@@ -59,7 +61,6 @@ public class MailData {
      * @return probability
      */
     public double calculateProbability(String word) {
-    	double prob = getWordCount(word)/getMailCount();
-        return prob;
+    	return getWordCount(word)/getMailCount();
     }
 }
