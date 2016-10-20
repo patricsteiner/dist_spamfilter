@@ -1,24 +1,59 @@
 package dist_spamfilter;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class SpamFilterTest {
 
-    SpamFilter spamFilter;
+    static SpamFilter spamFilter;
     
-    @Before
-    public void setup() throws IOException {
+    @BeforeClass
+    public static void setup() throws IOException {
         spamFilter = new SpamFilter();
         spamFilter.learn();
+        //Un-comment the following line if you want to input your own email:
+        //readEmailFromFile();
     }
-     
+    
+    
+    public static void readEmailFromFile() throws IOException {
+    	System.out.println("Please input path of email you want to add:");
+    	Scanner scanner = new Scanner(System.in);
+    	String fileName = scanner.nextLine();
+    	InputStream instream = new FileInputStream(new File(fileName));
+    	System.out.println(fileName);
+    	System.out.println("Probability of being ham: " + spamFilter.calculateProbability(instream, true, false));
+    	System.out.println("Probability of being spam: " + spamFilter.calculateProbability(instream, false, false));
+    	System.out.println(fileName + " was classified as " + (spamFilter.classify(instream) ? "spam" : "ham"));
+    	System.out.println("Is this mail spam or ham? (type either 'spam' or 'ham')");
+    	String s = "";
+    	while (!s.equals("spam") && !s.equals("ham")) {
+    		s = scanner.nextLine();
+    	}
+    	if (s.equals("spam")) {
+    		spamFilter.spam.add(Util.getWords(instream));
+    		System.out.println("Added to spam");
+    	}
+    	else {
+    		spamFilter.ham.add(Util.getWords(instream));
+    		System.out.println("Added to ham");
+    	}
+    	spamFilter.correlate();
+    	scanner.close();
+    	System.out.println("continuing with tests...");
+    }
+    
+    
     @Test
     /**
      * ~93% are correctly classified as ham!
@@ -38,7 +73,7 @@ public class SpamFilterTest {
              };
          }
          zipFile.close();
-         System.out.println("Ham correctly classified: "+ (int)((double)ham / (ham + spam) * 100) + "%");
+         System.out.println("Ham correctly classified: "+ ((double)ham / (ham + spam) * 100) + "%");
     }
     
     @Test
@@ -60,7 +95,7 @@ public class SpamFilterTest {
              };
          }
          zipFile.close();
-         System.out.println("Spam correctly classified: "+ (int)((double)spam / (ham + spam) * 100) + "%");
+         System.out.println("Spam correctly classified: "+ ((double)spam / (ham + spam) * 100) + "%");
     }
     
     @Test

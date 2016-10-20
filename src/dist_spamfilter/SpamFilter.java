@@ -88,14 +88,14 @@ public class SpamFilter {
      * @return P(Ham/Spam|words)
      */
 	public double calculateProbability(Collection<String> words, boolean hamOrSpam, boolean useLogFormula) {
-		MathContext mc = new MathContext(500, RoundingMode.HALF_UP);
+		MathContext mc = new MathContext(10000, RoundingMode.HALF_UP);
 		if (!useLogFormula) {
 		    BigDecimal numerator = new BigDecimal(1, mc);
 	        BigDecimal denominator = new BigDecimal(1, mc);
 	        for (String word : words) {
 	        	double ph = ham.calculateProbability(word);
 	        	double ps = spam.calculateProbability(word);
-	            if (( ph > 0 || ps > 0 ) && ph < 1 && ps < 1 ) {
+	            if (( ph > 0 || ps > 0 ) && ph < 1 && ps < 1 ) { //don't use extreme values to get a better result
 	                if (hamOrSpam) { 
 	                    numerator = numerator.multiply(BigDecimal.valueOf(ph), mc);
 	                    denominator = denominator.multiply(BigDecimal.valueOf(ps), mc);
