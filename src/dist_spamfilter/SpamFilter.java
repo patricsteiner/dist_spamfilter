@@ -110,7 +110,7 @@ public class SpamFilter {
 	        return numerator.divide(denominator, mc).doubleValue();
 		}
 		else {
-			//doesn't work that well
+			//this formula is from wikipedia, but it doesn't seem to work very well...
 		    BigDecimal sum = new BigDecimal(0, mc);
 	        for (String word : words) {
 	        	//if (ham.calculateProbability(word) > .1 || spam.calculateProbability(word) > .1)

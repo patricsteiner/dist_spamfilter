@@ -21,9 +21,10 @@ public class SpamFilterTest {
     @BeforeClass
     public static void setup() throws IOException {
         spamFilter = new SpamFilter();
+        System.out.println("Learning...");
         spamFilter.learn();
         //Un-comment the following line if you want to input your own email:
-        readEmailFromFile();
+        //readEmailFromFile();
     }
     
     
@@ -52,7 +53,7 @@ public class SpamFilterTest {
     	}
     	spamFilter.correlate();
     	scanner.close();
-    	System.out.println("continuing with tests...");
+    	System.out.println("Continuing with tests...");
     }
     
     
@@ -61,6 +62,7 @@ public class SpamFilterTest {
      * ~93% are correctly classified as ham!
      */
     public void testHamClassification() throws IOException {
+    	System.out.println("Classifying ham...");
     	int ham = 0;
     	int spam = 0;
     	 ZipFile zipFile = new ZipFile("ham-test.zip");
@@ -83,6 +85,7 @@ public class SpamFilterTest {
      * ~87% are correctly classified as spam!
      */
     public void testSpamClassification() throws IOException {
+    	System.out.println("Classifying spam...");
     	int ham = 0;
     	int spam = 0;
     	 ZipFile zipFile = new ZipFile("spam-test.zip");
